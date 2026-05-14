@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Globe - Extracted from Meow.com</title>
+<style>
+  body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
+    background: #171923;
+    font-family: system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+  }
+  #globe-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 520px;
+    height: 520px;
+    max-width: 90vw;
+    max-height: 90vw;
+  }
+  #cobe {
+    width: 520px;
+    height: 520px;
+    cursor: grab;
+  }
+  #cobe:active {
+    cursor: grabbing;
+  }
+  body > :first-child {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+  .info {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div id="globe-wrap">
+  <canvas id="cobe" width="1040" height="1040"></canvas>
+</div>
+<p class="info">Drag to rotate • Scroll to zoom</p>
+
+<script type="importmap">
+{
+  "imports": {
+    "cobe": "https://cdn.jsdelivr.net/npm/cobe@2.0.1/+esm"
+  }
+}
+</script>
+
+<script type="module">
+import createGlobe from 'cobe';
+
+const canvas = document.getElementById('cobe');
+
+let phi = 0;
+let theta = 0.3;
+let isDragging = false;
+let prevX = 0;
+let prevY = 0;
+
+const globe = createGlobe(canvas, {
+  devicePixelRatio: 2,
+  width: 1040,
+  height: 1040,
+  phi: 0,
+  theta: 0.3,
+  dark: 1,
+  diffuse: 1.5,
+  mapSamples: 16000,
+  mapBrightness: 10,
+  mapBaseBrightness: 0,
+  baseColor: [0, 0.5, 1],
+  markerColor: [0, 1, 1],
+  glowColor: [0, 0.3, 0.8],
+  markers: [
+    { location: [37.78, -122.44], size: 0.03, id: 'sf' },
+    { location: [40.71, -74.01], size: 0.03, id: 'nyc' },
+    { location: [51.51, -0.13], size: 0.03, id: 'london' },
+    { location: [35.68, 139.69], size: 0.03, id: 'tokyo' },
+    { location: [-33.87, 151.21], size: 0.03, id: 'sydney' },
+    { location: [28.61, 77.23], size: 0.04, id: 'delhi' },
+    { location: [12.97, 77.59], size: 0.04, id: 'bangalore' },
+    { location: [55.76, 37.62], size: 0.04, id: 'moscow' },
+    { location: [37.78, -122.44], size: 0.04, id: 'sf' },
+    { location: [34.05, -118.24], size: 0.04, id: 'la' },
+  ],
+  arcs: [
+    { from: [37.78, -122.44], to: [40.71, -74.01] },
+    { from: [37.78, -122.44], to: [51.51, -0.13] },
+    { from: [37.78, -122.44], to: [35.68, 139.69] },
+    { from: [28.61, 77.23], to: [35.68, 139.69] },
+    { from: [12.97, 77.59], to: [35.68, 139.69] },
+    { from: [12.97, 77.59], to: [55.76, 37.62] },
+    { from: [12.97, 77.59], to: [37.78, -122.44], color: [1, 0, 0] },
+    { from: [12.97, 77.59], to: [34.05, -118.24], color:[1, 0.41, 0.71]  },
+  ],
+  arcColor: [0, 0.8, 1],
+  arcWidth: 1,
+  arcHeight: 0.6,
+  markerElevation: 0.02,
+});
+
+canvas.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  prevX = e.clientX;
+  prevY = e.clientY;
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  const dx = e.clientX - prevX;
+  const dy = e.clientY - prevY;
+  phi += dx * 0.005;
+  theta = Math.max(-1.2, Math.min(1.2, theta - dy * 0.005));
+  globe.update({ phi, theta });
+  prevX = e.clientX;
+  prevY = e.clientY;
+});
+
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+});
+
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const scale = [...document.querySelectorAll('meta[name=viewport]')].length > 0 ? 1 : 1;
+  const newScale = Math.max(0.5, Math.min(2, globe._scale || 1 - e.deltaY * 0.001));
+  globe.update({ scale: newScale });
+}, { passive: false });
+
+function animate() {
+  if (!isDragging) {
+    phi += 0.004;
+    globe.update({ phi, theta });
+  }
+  requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+</body>
+</html>
